@@ -1,0 +1,14 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="gl" type="GoApplicationRunConfiguration" factoryName="Go Application">
+    <module name="GhostPioneer" />
+    <working_directory value="$PROJECT_DIR$/" />
+    <go_parameters value="-i -ldflags -H=windowsgui" />
+    <kind value="DIRECTORY" />
+    <filePath value="$PROJECT_DIR$/main/Launcher.go" />
+    <package value="GhostPioneer" />
+    <directory value="$PROJECT_DIR$/main" />
+    <output_directory value="$PROJECT_DIR$/" />
+    <option name="run" value="false" />
+    <method v="2" />
+  </configuration>
+</component>
