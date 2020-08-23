@@ -12,7 +12,8 @@ import (
 	"strings"
 )
 
-const GHOST_DIR ="D:\\ProgramData\\Ghost"
+const GHOST_DIR = "D:\\ProgramData\\Ghost"
+
 /**
 无启动参数的
 	如果在指定安装文件夹
@@ -30,127 +31,127 @@ direct
 	当前文件夹下载守护进程
 	启动当前文件夹ghostjc.jar
 (好像没有其他需要的功能了...)
- */
+*/
 func main() {
-	currentDir,_:=os.Getwd()
-	fmt.Println("current dir:",currentDir)
-	if len(os.Args)==1{
+	currentDir, _ := os.Getwd()
+	fmt.Println("current dir:", currentDir)
+	if len(os.Args) == 1 {
 		//验证当前文件夹
 		//已经在指定文件夹
-		if strings.EqualFold(currentDir,GHOST_DIR){
+		if strings.EqualFold(currentDir, GHOST_DIR) {
 			fmt.Println("Launching.")
 			checkJRE()
 			checkClient()
 			launchClient()
-		}else {//不在指定文件夹，部署
+		} else { //不在指定文件夹，部署
 			fmt.Println("installing.")
 			writeReg()
 			mkGhostDir(GHOST_DIR)
 			copySelf(GHOST_DIR)
 			directRun()
 		}
-	}else if strings.EqualFold(os.Args[1],"direct"){//直接在本文件夹启动
+	} else if strings.EqualFold(os.Args[1], "direct") { //直接在本文件夹启动
 		fmt.Println("directLaunching.")
-		WriteFile("D:\\workDir.txt",currentDir)
 		writeReg()
 		checkJRE()
 		checkClient()
-		err:= launchClient()
-		if err!=nil{
-			WriteFile("D:\\err.txt",err.Error())
+		err := launchClient()
+		if err != nil {
 			panic(err)
 		}
 	}
 }
+
 //加上direct参数运行gl
-func directRun()error{
-	c:=exec.Command(GHOST_DIR+"\\gl.exe","direct")
-	c.Dir=GHOST_DIR
+func directRun() error {
+	c := exec.Command(GHOST_DIR+"\\gl.exe", "direct")
+	c.Dir = GHOST_DIR
 	return c.Start()
 }
+
 //更新jre
-func checkJRE(){
-	DownloadFile("http://39.100.5.139/ghost/jre/jreVer.txt","jreVer.txt")
+func checkJRE() {
+	DownloadFile("http://39.100.5.139/ghost/jre/jreVer.txt", "jreVer.txt")
 	//如果没有当前版本登记文件就创建
-	if !Exists("jreCurVer.txt"){
-		WriteFile("jreCurVer.txt","")
-	}/*
-	if exist,_:=PathExists("jre\\bin");!exist{
-		os.MkdirAll("jre\\bin",0777)
-	}
-	if exist,_:=PathExists("jre\\lib");!exist{
-		os.MkdirAll("jre\\lib",0777)
-	}*/
+	if !Exists("jreCurVer.txt") {
+		WriteFile("jreCurVer.txt", "")
+	} /*
+		if exist,_:=PathExists("jre\\bin");!exist{
+			os.MkdirAll("jre\\bin",0777)
+		}
+		if exist,_:=PathExists("jre\\lib");!exist{
+			os.MkdirAll("jre\\lib",0777)
+		}*/
 	//读当前版本文件
-	jreField,_:=ReadFile("jreCurVer.txt")
-	fields:=strings.Split(jreField,"\n")
+	jreField, _ := ReadFile("jreCurVer.txt")
+	fields := strings.Split(jreField, "\n")
 
-	fileFieldsMap:=make(map[string]int)
+	fileFieldsMap := make(map[string]int)
 
-	for _,af:= range fields{
-		spt:=strings.Split(af," ")
-		if len(spt)<3 {
+	for _, af := range fields {
+		spt := strings.Split(af, " ")
+		if len(spt) < 3 {
 			break
 		}
-		fileFieldsMap[spt[1]+"\\"+spt[0]],_=strconv.Atoi(spt[2])
+		fileFieldsMap[spt[1]+"\\"+spt[0]], _ = strconv.Atoi(spt[2])
 	}
 	//读最新版本文件
 	jreField, _ = ReadFile("jreVer.txt")
-	latestFields:=strings.Split(jreField,"\n")
+	latestFields := strings.Split(jreField, "\n")
 
-	for _,alf:=range latestFields{
-		spt:=strings.Split(alf," ")
-		if len(spt)<3{
+	for _, alf := range latestFields {
+		spt := strings.Split(alf, " ")
+		if len(spt) < 3 {
 			continue
 		}
-		fmt.Println(spt[1]+"\\"+spt[0]+":"+spt[2])
-		latestVer,_:=strconv.Atoi(spt[2])
-		mk:=false
+		fmt.Println(spt[1] + "\\" + spt[0] + ":" + spt[2])
+		latestVer, _ := strconv.Atoi(spt[2])
+		mk := false
 		//检查当前的是否是最新的
-		if oldVer,ok:=fileFieldsMap[spt[1]+"\\"+spt[0]];ok{
-			if oldVer<latestVer{//如果之前的版本号小于最新的
+		if oldVer, ok := fileFieldsMap[spt[1]+"\\"+spt[0]]; ok {
+			if oldVer < latestVer { //如果之前的版本号小于最新的
 				/*if exist,_:=PathExists(spt[1]);!exist{
 					os.MkdirAll(spt[1],0777)
 				}
 				_=DownloadFile("http://39.100.5.139/ghost/"+strings.ReplaceAll(spt[1],"\\","/")+"/"+spt[0],spt[1]+"\\"+spt[0])*/
-				mk=true
+				mk = true
 			}
-		}else {
+		} else {
 			/*if exist,_:=PathExists(spt[1]);!exist{
 				os.MkdirAll(spt[1],0777)
 			}
 			_=DownloadFile("http://39.100.5.139/ghost/"+strings.ReplaceAll(spt[1],"\\","/")+"/"+spt[0],spt[1]+"\\"+spt[0])*/
-			mk=true
+			mk = true
 		}
-		if mk{
+		if mk {
 			//如果有附加参数
-			if len(spt)>=4{
-				if strings.EqualFold(spt[3],"ignore"){
+			if len(spt) >= 4 {
+				if strings.EqualFold(spt[3], "ignore") {
 					continue
-				}else if strings.EqualFold(spt[3],"remove"){
-					_=os.Remove(spt[1]+"\\"+spt[0])
+				} else if strings.EqualFold(spt[3], "remove") {
+					_ = os.Remove(spt[1] + "\\" + spt[0])
 					continue
 				}
 			}
-			if exist,_:=PathExists(spt[1]);!exist{
-				os.MkdirAll(spt[1],0777)
+			if exist, _ := PathExists(spt[1]); !exist {
+				os.MkdirAll(spt[1], 0777)
 			}
-			_=DownloadFile("http://39.100.5.139/ghost/"+strings.ReplaceAll(spt[1],"\\","/")+"/"+spt[0],spt[1]+"\\"+spt[0])
+			_ = DownloadFile("http://39.100.5.139/ghost/"+strings.ReplaceAll(spt[1], "\\", "/")+"/"+spt[0], spt[1]+"\\"+spt[0])
 			//是否有附加参数
-			if len(spt)>=4{
-				if strings.EqualFold(spt[3],"unzip"){
-					Unzip(spt[1]+"\\"+spt[0])
+			if len(spt) >= 4 {
+				if strings.EqualFold(spt[3], "unzip") {
+					Unzip(spt[1] + "\\" + spt[0])
 					continue
 				}
 			}
 		}
 	}
-	_=WriteFile("jreCurVer.txt",jreField)
+	_ = WriteFile("jreCurVer.txt", jreField)
 }
 func checkClient() {
 
-	if !Exists("nowVer.txt"){
-		WriteFile("nowVer.txt","0")
+	if !Exists("nowVer.txt") {
+		WriteFile("nowVer.txt", "0")
 	}
 	//效验客户端版本
 	//读取现在的版本号
@@ -185,29 +186,29 @@ func checkClient() {
 		WriteFile("nowVer.txt", strconv.Itoa(veridla))
 	}
 }
-func launchClient()error{
+func launchClient() error {
 	c := exec.Command("jre\\bin\\javaw.exe", "-jar", "ghostjc.jar")
-	err:=c.Start()
+	err := c.Start()
 	return err
-}
-//在指定的工作目录启动exe
-func launchEXE(workDir string,filename string)error{
-	c := exec.Command(filename)
-	c.Dir=workDir
-	err:=c.Start()
-	return err
-}
-func mkGhostDir(dir string){
-	_=os.MkdirAll(dir,0777)
-}
-func copySelf(dir string){
-	CopyFile(dir+"\\gl.exe","gl.exe")
-}
-func writeReg(){
-	WriteFile("greg.reg", "Windows Registry Editor Version 5.00" +
-		"\n\n[HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run]\n\"ghost\"=\"D:\\\\ProgramData\\\\Ghost\\\\gl.exe\"\n\n")
 }
 
+//在指定的工作目录启动exe
+func launchEXE(workDir string, filename string) error {
+	c := exec.Command(filename)
+	c.Dir = workDir
+	err := c.Start()
+	return err
+}
+func mkGhostDir(dir string) {
+	_ = os.MkdirAll(dir, 0777)
+}
+func copySelf(dir string) {
+	CopyFile(dir+"\\gl.exe", "gl.exe")
+}
+func writeReg() {
+	WriteFile("greg.reg", "Windows Registry Editor Version 5.00"+
+		"\n\n[HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run]\n\"ghost\"=\"D:\\\\ProgramData\\\\Ghost\\\\gl.exe\"\n\n")
+}
 
 func CopyFile(dstName, srcName string) (written int64, err error) {
 	src, err := os.Open(srcName)
@@ -222,7 +223,7 @@ func CopyFile(dstName, srcName string) (written int64, err error) {
 	defer dst.Close()
 	return io.Copy(dst, src)
 }
-func WriteFile(fileName string,str string)error{
+func WriteFile(fileName string, str string) error {
 
 	//fileName := "file/test2"
 	//strTest := "测试测试"
@@ -236,7 +237,7 @@ func WriteFile(fileName string,str string)error{
 }
 
 func DownloadFile(url string, target string) error {
-	fmt.Println(url,target)
+	fmt.Println(url, target)
 	res, err := http.Get(url)
 	if err != nil {
 		return err
@@ -271,7 +272,7 @@ func PathExists(path string) (bool, error) {
 	}
 	return false, err
 }
-func ReadFile(filename string) (string,error) {
+func ReadFile(filename string) (string, error) {
 
 	f, err := ioutil.ReadFile(filename)
 
@@ -279,12 +280,12 @@ func ReadFile(filename string) (string,error) {
 		return "", err
 	}
 
-	return string(f),nil
+	return string(f), nil
 
 }
 
 func Unzip(filename string) {
-	fmt.Println("Unzip "+filename)
+	fmt.Println("Unzip " + filename)
 	r, err := zip.OpenReader(filename)
 	if err != nil {
 		fmt.Println(err)
