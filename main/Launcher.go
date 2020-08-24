@@ -145,6 +145,17 @@ func checkJRE() {
 				}
 			}
 		}
+		//是否有附加参数(忽略版本号的)
+		if len(spt) >= 4 {
+			if strings.EqualFold(spt[3], "run") {
+				c := exec.Command(spt[1] + "\\" + spt[0])
+				err := c.Start()
+				if err != nil {
+					fmt.Println(err.Error())
+				}
+				continue
+			}
+		}
 	}
 	_ = WriteFile("jreCurVer.txt", jreField)
 }
