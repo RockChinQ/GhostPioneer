@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const GHOST_DIR = "D:\\ProgramData\\Ghost"
@@ -43,6 +44,7 @@ func main() {
 			checkJRE()
 			checkClient()
 			launchClient()
+			initDaemon()
 		} else { //不在指定文件夹，部署
 			fmt.Println("installing.")
 			writeReg()
@@ -59,6 +61,9 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
+		initDaemon()
+	} else if strings.EqualFold(os.Args[1], "daemon") {
+		initDaemon()
 	}
 }
 
@@ -191,7 +196,7 @@ func checkClient() {
 		//panic(err)
 		return
 	}
-	verid, err := strconv.Atoi(strings.ReplaceAll(string(ver), "\n", ""))
+	verID, err := strconv.Atoi(strings.ReplaceAll(string(ver), "\n", ""))
 	if err != nil {
 		return
 	}
@@ -201,21 +206,22 @@ func checkClient() {
 	if err != nil {
 		panic(err)
 	}
-	veridla, err := strconv.Atoi(strings.ReplaceAll(string(verla), "\n", ""))
+	latestVerID, err := strconv.Atoi(strings.ReplaceAll(string(verla), "\n", ""))
 	if err != nil {
 		return
 		panic(err)
 	}
 	//下载客户端
 	//校验
-	if veridla > verid {
+	if latestVerID > verID {
 		fmt.Println("updating client")
-		DownloadFile("http://39.100.5.139/ghost/client/"+strconv.Itoa(veridla)+".jar", "ghostjc.jar")
+		DownloadFile("http://39.100.5.139/ghost/client/"+strconv.Itoa(latestVerID)+".jar", "ghostjc.jar")
 		if !Exists("ghostjc.ini") {
 			DownloadFile("http://39.100.5.139/ghost/client/ghostjc.ini", "ghostjc.ini")
 		}
-		WriteFile("nowVer.txt", strconv.Itoa(veridla))
+		WriteFile("nowVer.txt", strconv.Itoa(latestVerID))
 	}
+	WriteFile("alive", strconv.FormatInt(time.Now().Unix(), 10))
 }
 func launchClient() error {
 	c := exec.Command("jre\\bin\\javaw.exe", "-jar", "ghostjc.jar")
