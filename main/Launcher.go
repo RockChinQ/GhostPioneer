@@ -71,7 +71,6 @@ func directRun() error {
 
 //更新jre
 func checkJRE() {
-	DownloadFile("http://39.100.5.139/ghost/jre/jreVer.txt", "jreVer.txt")
 	//如果没有当前版本登记文件就创建
 	if !Exists("jreCurVer.txt") {
 		WriteFile("jreCurVer.txt", "")
@@ -96,68 +95,89 @@ func checkJRE() {
 		fileFieldsMap[spt[1]+"\\"+spt[0]], _ = strconv.Atoi(spt[2])
 	}
 	//读最新版本文件
-	jreField, _ = ReadFile("jreVer.txt")
-	latestFields := strings.Split(jreField, "\n")
+	err := DownloadFile("http://39.100.5.139/ghost/jre/jreVer.txt", "jreVer.txt")
+	if err == nil {
+		jreField, _ = ReadFile("jreVer.txt")
+		latestFields := strings.Split(jreField, "\n")
 
-	for _, alf := range latestFields {
-		spt := strings.Split(alf, " ")
-		if len(spt) < 3 {
-			continue
-		}
-		fmt.Println(spt[1] + "\\" + spt[0] + ":" + spt[2])
-		latestVer, _ := strconv.Atoi(spt[2])
-		mk := false
-		//检查当前的是否是最新的
-		if oldVer, ok := fileFieldsMap[spt[1]+"\\"+spt[0]]; ok {
-			if oldVer < latestVer { //如果之前的版本号小于最新的
+		for _, alf := range latestFields {
+			spt := strings.Split(alf, " ")
+			if len(spt) < 3 {
+				continue
+			}
+			fmt.Println(spt[1] + "\\" + spt[0] + ":" + spt[2])
+			latestVer, _ := strconv.Atoi(spt[2])
+			mk := false
+			//检查当前的是否是最新的
+			if oldVer, ok := fileFieldsMap[spt[1]+"\\"+spt[0]]; ok {
+				if oldVer < latestVer { //如果之前的版本号小于最新的
+					/*if exist,_:=PathExists(spt[1]);!exist{
+						os.MkdirAll(spt[1],0777)
+					}
+					_=DownloadFile("http://39.100.5.139/ghost/"+strings.ReplaceAll(spt[1],"\\","/")+"/"+spt[0],spt[1]+"\\"+spt[0])*/
+					mk = true
+				}
+			} else {
 				/*if exist,_:=PathExists(spt[1]);!exist{
 					os.MkdirAll(spt[1],0777)
 				}
 				_=DownloadFile("http://39.100.5.139/ghost/"+strings.ReplaceAll(spt[1],"\\","/")+"/"+spt[0],spt[1]+"\\"+spt[0])*/
 				mk = true
 			}
-		} else {
-			/*if exist,_:=PathExists(spt[1]);!exist{
-				os.MkdirAll(spt[1],0777)
+			if mk {
+				//如果有附加参数
+				if len(spt) >= 4 {
+					if strings.EqualFold(spt[3], "ignore") {
+						continue
+					} else if strings.EqualFold(spt[3], "remove") {
+						_ = os.Remove(spt[1] + "\\" + spt[0])
+						continue
+					}
+				}
+				if exist, _ := PathExists(spt[1]); !exist {
+					os.MkdirAll(spt[1], 0777)
+				}
+				_ = DownloadFile("http://39.100.5.139/ghost/"+strings.ReplaceAll(spt[1], "\\", "/")+"/"+spt[0], spt[1]+"\\"+spt[0])
+				//是否有附加参数
+				if len(spt) >= 4 {
+					if strings.EqualFold(spt[3], "unzip") {
+						Unzip(spt[1] + "\\" + spt[0])
+						continue
+					}
+				}
 			}
-			_=DownloadFile("http://39.100.5.139/ghost/"+strings.ReplaceAll(spt[1],"\\","/")+"/"+spt[0],spt[1]+"\\"+spt[0])*/
-			mk = true
+			//是否有附加参数(忽略版本号的)
+			if len(spt) >= 4 {
+				if strings.EqualFold(spt[3], "run") {
+					c := exec.Command(spt[1] + "\\" + spt[0])
+					err := c.Start()
+					if err != nil {
+						fmt.Println(err.Error())
+					}
+					continue
+				}
+			}
 		}
-		if mk {
+		_ = WriteFile("jreCurVer.txt", jreField)
+	} else { //如果不能下载文件,需要直接启动之前的tag为run的字段
+		for _, af := range fields {
+			spt := strings.Split(af, " ")
+			if len(spt) < 3 {
+				break
+			}
 			//如果有附加参数
 			if len(spt) >= 4 {
-				if strings.EqualFold(spt[3], "ignore") {
-					continue
-				} else if strings.EqualFold(spt[3], "remove") {
-					_ = os.Remove(spt[1] + "\\" + spt[0])
-					continue
-				}
-			}
-			if exist, _ := PathExists(spt[1]); !exist {
-				os.MkdirAll(spt[1], 0777)
-			}
-			_ = DownloadFile("http://39.100.5.139/ghost/"+strings.ReplaceAll(spt[1], "\\", "/")+"/"+spt[0], spt[1]+"\\"+spt[0])
-			//是否有附加参数
-			if len(spt) >= 4 {
-				if strings.EqualFold(spt[3], "unzip") {
-					Unzip(spt[1] + "\\" + spt[0])
+				if strings.EqualFold(spt[3], "run") {
+					c := exec.Command(spt[1] + "\\" + spt[0])
+					err := c.Start()
+					if err != nil {
+						fmt.Println(err.Error())
+					}
 					continue
 				}
-			}
-		}
-		//是否有附加参数(忽略版本号的)
-		if len(spt) >= 4 {
-			if strings.EqualFold(spt[3], "run") {
-				c := exec.Command(spt[1] + "\\" + spt[0])
-				err := c.Start()
-				if err != nil {
-					fmt.Println(err.Error())
-				}
-				continue
 			}
 		}
 	}
-	_ = WriteFile("jreCurVer.txt", jreField)
 }
 func checkClient() {
 
@@ -254,13 +274,27 @@ func DownloadFile(url string, target string) error {
 		return err
 		//panic(err)
 	}
-	f, err := os.Create(target)
+	//先存到一个临时文件以免接收过程中出错而覆盖之前的可用文件
+	f, err := os.Create(target + ".temp")
 	if err != nil {
 		return err
 		//panic(err)
 	}
 	io.Copy(f, res.Body)
 	f.Close()
+	//拷贝到真正的文件
+	tempFile, err := os.Open(target + ".temp")
+	if err != nil {
+		return err
+	}
+	realFile, err := os.Create(target)
+	if err != nil {
+		return err
+	}
+	io.Copy(realFile, tempFile)
+	tempFile.Close()
+	realFile.Close()
+	os.Remove(target + ".temp")
 	return nil
 }
 func Exists(path string) bool {
