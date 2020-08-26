@@ -1,0 +1,13 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="routines" type="GoApplicationRunConfiguration" factoryName="Go Application">
+    <module name="GhostPioneer" />
+    <working_directory value="$PROJECT_DIR$/" />
+    <go_parameters value="-i" />
+    <parameters value="routines" />
+    <kind value="DIRECTORY" />
+    <filePath value="$PROJECT_DIR$/" />
+    <package value="GhostPioneer" />
+    <directory value="$PROJECT_DIR$/main" />
+    <method v="2" />
+  </configuration>
+</component>

@@ -10,10 +10,13 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
 const GHOST_DIR = "D:\\ProgramData\\Ghost"
+
+var wg sync.WaitGroup
 
 /**
 无启动参数的
@@ -44,7 +47,7 @@ func main() {
 			checkJRE()
 			checkClient()
 			launchClient()
-			initDaemon()
+			initRoutines()
 		} else { //不在指定文件夹，部署
 			fmt.Println("installing.")
 			writeReg()
@@ -61,10 +64,20 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		initDaemon()
+		initRoutines()
 	} else if strings.EqualFold(os.Args[1], "daemon") {
 		initDaemon()
+	} else if strings.EqualFold(os.Args[1], "rescue") {
+		initRescue()
+	} else if strings.EqualFold(os.Args[1], "routines") {
+		initRoutines()
 	}
+}
+func initRoutines() {
+	wg.Add(2)
+	initDaemon()
+	initRescue()
+	wg.Wait()
 }
 
 //加上direct参数运行gl

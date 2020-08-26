@@ -18,6 +18,7 @@ func initDaemon() {
 		checkAliveThread()
 		time.Sleep(TIME_OUT * time.Second)
 	}
+	wg.Done()
 }
 func checkAliveThread() {
 	nowTime := time.Now().Unix()
