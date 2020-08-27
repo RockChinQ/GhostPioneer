@@ -38,9 +38,6 @@ func checkAliveThread() {
 	}
 	//当前时间与客户端上次打出的时间差距超过timeout的秒数则启动客户端
 	if (nowTime - clientTime) > int64(TIME_OUT) {
-		err := launchClient()
-		if err != nil {
-			fmt.Println(err.Error())
-		}
+		go launchClient()
 	}
 }

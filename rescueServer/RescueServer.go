@@ -75,6 +75,7 @@ readMsg:
 			continue readMsg
 		}
 		fmt.Println(string(msg))
+		//fmt.Print(strings.ReplaceAll(string(msg),"#ln","\n"))
 	}
 }
 func removeConn(conn net.Conn) {

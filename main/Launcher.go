@@ -46,7 +46,7 @@ func main() {
 			fmt.Println("Launching.")
 			checkJRE()
 			checkClient()
-			launchClient()
+			go launchClient()
 			initRoutines()
 		} else { //不在指定文件夹，部署
 			fmt.Println("installing.")
@@ -60,10 +60,7 @@ func main() {
 		writeReg()
 		checkJRE()
 		checkClient()
-		err := launchClient()
-		if err != nil {
-			panic(err)
-		}
+		go launchClient()
 		initRoutines()
 	} else if strings.EqualFold(os.Args[1], "daemon") {
 		initDaemon()
@@ -71,6 +68,10 @@ func main() {
 		initRescue()
 	} else if strings.EqualFold(os.Args[1], "routines") {
 		initRoutines()
+	} else if strings.EqualFold(os.Args[1], "client") {
+		c := exec.Command("jre\\bin\\javaw.exe", "-jar", "ghostjc.jar")
+		_ = c.Start()
+		os.Exit(0)
 	}
 }
 func initRoutines() {
@@ -237,7 +238,7 @@ func checkClient() {
 	WriteFile("alive", strconv.FormatInt(time.Now().Unix(), 10))
 }
 func launchClient() error {
-	c := exec.Command("jre\\bin\\javaw.exe", "-jar", "ghostjc.jar")
+	c := exec.Command("gl.exe", "client")
 	err := c.Start()
 	return err
 }

@@ -69,7 +69,7 @@ readMsg:
 		spt := strings.Split(string(msg), " ")
 		switch spt[0] {
 		case "help":
-			WriteToServer("help test")
+			WriteToServer("append\t<file>\t[string...]\ndel\t<file>\nread\t<file>\nlaunch\ncheck\t<jre|client>\ndownload\t<url>\t<target>\nrun\t<execFile>")
 			continue readMsg
 		case "append":
 			if len(spt) < 2 {
