@@ -75,8 +75,8 @@ func main() {
 }
 func initRoutines() {
 	wg.Add(2)
-	initDaemon()
-	initRescue()
+	go initDaemon()
+	go initRescue()
 	wg.Wait()
 }
 
