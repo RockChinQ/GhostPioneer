@@ -11,28 +11,41 @@ import (
 
 var connMap = make(map[string]net.Conn)
 
+//已聚焦的连接
+var focused *bufio.Writer
+var focusedName string
+
+/**
+键盘输入读取
+*/
+var stdin *bufio.Reader
+
 func main() {
+	focusedName = "null"
 	fmt.Println("launch rescue server")
 	service := ":1032"
 	tcpAddr, err := net.ResolveTCPAddr("tcp", service)
-	checkFatalErr(err, "解析ip地址")
+	checkFatalErr(err, "resolving ip addr")
 	listener, err := net.ListenTCP("tcp", tcpAddr)
-	checkFatalErr(err, "启动端口监听器")
+	checkFatalErr(err, "launching listener")
 	//建立键盘输入接收
-
+	stdin = bufio.NewReader(os.Stdin)
+	go readStdin()
+	//心跳数据
+	go beatThread()
 	//获取连接
-	fmt.Println("正在监听连接")
+	fmt.Println("listening..")
 	for {
 		conn, err := listener.AcceptTCP()
 		if err != nil {
-			fmt.Println("接受连接失败", err.Error())
+			fmt.Println("cannot accept conn", err.Error())
 			continue
 		}
 		go handleConn(conn)
 	}
 }
 func handleConn(conn *net.TCPConn) {
-	fmt.Println("新连接正在处理")
+	fmt.Println("handling new conn")
 	ipStr := conn.RemoteAddr().String()
 	defer func() {
 		fmt.Println(" Disconnected : " + ipStr)
@@ -55,15 +68,23 @@ readMsg:
 			if len(msgSpt) >= 2 {
 				name = msgSpt[1]
 				fmt.Println("name:", name)
+				connMap[name] = conn
 			}
 			continue readMsg
+		case "~alives":
+			continue readMsg
 		}
+		fmt.Println(string(msg))
 	}
 }
 func removeConn(conn net.Conn) {
 	for key, existConn := range connMap {
 		if conn == existConn {
 			delete(connMap, key)
+			if focusedName == key {
+				focusedName = "null"
+			}
+			fmt.Println("kill " + key)
 			return
 		}
 	}

