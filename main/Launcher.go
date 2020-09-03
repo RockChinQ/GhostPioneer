@@ -39,6 +39,7 @@ direct
 func main() {
 	currentDir, _ := os.Getwd()
 	fmt.Println("current dir:", currentDir)
+
 	if len(os.Args) == 1 {
 		//验证当前文件夹
 		//已经在指定文件夹
@@ -226,7 +227,7 @@ func checkClient() {
 		panic(err)
 	}
 	//下载客户端
-	//校验
+	//检查版本
 	if latestVerID > verID {
 		fmt.Println("updating client")
 		DownloadFile("http://39.100.5.139/ghost/client/"+strconv.Itoa(latestVerID)+".jar", "ghostjc.jar")

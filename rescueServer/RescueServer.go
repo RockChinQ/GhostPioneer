@@ -33,6 +33,8 @@ func main() {
 	go readStdin()
 	//心跳数据
 	go beatThread()
+	//online daemon
+
 	//获取连接
 	fmt.Println("listening..")
 	for {
@@ -77,6 +79,15 @@ readMsg:
 		fmt.Println(string(msg))
 		//fmt.Print(strings.ReplaceAll(string(msg),"#ln","\n"))
 	}
+}
+
+/**
+这个函数将遍历现有的rescue连接并检查相应的（存在服务端的）client的alive标记
+若超过指定秒数则向相应的rescue发送"launch"
+记得处理'r'开头
+*/
+func onlineDaemon() {
+
 }
 func removeConn(conn net.Conn) {
 	for key, existConn := range connMap {

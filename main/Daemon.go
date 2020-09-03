@@ -12,12 +12,12 @@ const TIME_OUT = 2 * 60
 /**
 GhostJ的守护进程
 */
-func initDaemon() {
-	fmt.Println("Daemon launch.")
-	for {
-		checkAliveThread()
-		time.Sleep(TIME_OUT * time.Second)
-	}
+func initDaemon() { /*
+		fmt.Println("Daemon launch.")
+		for {
+			checkAliveThread()
+			time.Sleep(TIME_OUT * time.Second)
+		}*/
 	wg.Done()
 }
 func checkAliveThread() {
