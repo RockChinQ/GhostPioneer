@@ -18,8 +18,10 @@ func beatThread() {
 	}
 }
 func checkDiscClient() {
+	//fmt.Println("check clients")
 	//检查没有启动的客户端
 	clientsStr, _ := ReadFile("onlineClients.txt")
+	//fmt.Println("clientStr:"+clientsStr)
 	clients := strings.Split(clientsStr, " ")
 	//遍历rescue，找出存在rescue但是没有client的机器
 	for key, conn := range connMap {
@@ -29,13 +31,12 @@ func checkDiscClient() {
 		}
 		//clients列表里是否存在与rescue同名的连接
 		//不存在则启动
+		fmt.Println("check rescue:" + key)
 		if !IsContains(clients, key) {
-			go func() {
-				write := bufio.NewWriter(conn)
-				fmt.Println("launching disc client:" + key)
-				write.Write([]byte("launch\n"))
-				write.Flush()
-			}()
+			write := bufio.NewWriter(conn)
+			fmt.Println("launching disc client:" + key)
+			write.Write([]byte("launch\n"))
+			write.Flush()
 		}
 	}
 }
