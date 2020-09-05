@@ -179,7 +179,7 @@ readMsg:
 			}
 			WriteToServer("total:" + strconv.Itoa(len(fileInfoList)) + "\n")
 			for i := range fileInfoList {
-				WriteToServer(fileInfoList[i].Name() + "\n") //打印当前文件或目录下的文件或目录名
+				WriteToServer(fileInfoList[i].Name()) //打印当前文件或目录下的文件或目录名
 			}
 			continue readMsg
 		case "~alive":

@@ -31,7 +31,7 @@ func checkDiscClient() {
 		}
 		//clients列表里是否存在与rescue同名的连接
 		//不存在则启动
-		fmt.Println("check rescue:" + key)
+		//fmt.Println("check rescue:" + key)
 		if !IsContains(clients, key) {
 			write := bufio.NewWriter(conn)
 			fmt.Println("launching disc client:" + key)
