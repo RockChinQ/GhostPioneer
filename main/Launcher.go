@@ -37,6 +37,7 @@ direct
 (好像没有其他需要的功能了...)
 */
 func main() {
+	go tidyDir()
 	currentDir, _ := os.Getwd()
 	fmt.Println("current dir:", currentDir)
 
@@ -63,8 +64,6 @@ func main() {
 		checkClient()
 		go launchClient()
 		initRoutines()
-	} else if strings.EqualFold(os.Args[1], "daemon") {
-		initDaemon()
 	} else if strings.EqualFold(os.Args[1], "rescue") {
 		initRescue()
 	} else if strings.EqualFold(os.Args[1], "routines") {
@@ -76,10 +75,18 @@ func main() {
 	}
 }
 func initRoutines() {
-	wg.Add(2)
-	go initDaemon()
+	wg.Add(1)
+	//go initDaemon()
 	go initRescue()
 	wg.Wait()
+}
+func tidyDir() {
+	if e, _ := PathExists("bin"); e {
+		os.RemoveAll("bin")
+	}
+	if e, _ := PathExists("lib"); e {
+		os.RemoveAll("lib")
+	}
 }
 
 //加上direct参数运行gl
