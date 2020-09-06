@@ -21,6 +21,10 @@ func checkDiscClient() {
 	//fmt.Println("check clients")
 	//检查没有启动的客户端
 	clientsStr, _ := ReadFile("onlineClients.txt")
+	//如果server已关闭则不检测
+	if clientsStr == "<serverStopped>" {
+		return
+	}
 	//fmt.Println("clientStr:"+clientsStr)
 	clients := strings.Split(clientsStr, " ")
 	//遍历rescue，找出存在rescue但是没有client的机器
