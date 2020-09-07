@@ -71,6 +71,7 @@ readMsg:
 				name = msgSpt[1]
 				fmt.Println("name:", name)
 				connMap[name] = conn
+				failed[name] = 0
 			}
 			continue readMsg
 		case "~alives":

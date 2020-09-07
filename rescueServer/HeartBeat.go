@@ -9,6 +9,7 @@ import (
 )
 
 func beatThread() {
+
 	for {
 		time.Sleep(time.Second * 30)
 		for _, conn := range connMap {
@@ -17,6 +18,10 @@ func beatThread() {
 		go checkDiscClient()
 	}
 }
+
+//记录了每个客户端检测失败的次数,2次时就重启
+var failed = make(map[string]int)
+
 func checkDiscClient() {
 	//fmt.Println("check clients")
 	//检查没有启动的客户端
@@ -37,10 +42,17 @@ func checkDiscClient() {
 		//不存在则启动
 		//fmt.Println("check rescue:" + key)
 		if !IsContains(clients, key) {
-			write := bufio.NewWriter(conn)
-			fmt.Println("launching disc client:" + key)
-			write.Write([]byte("launch\n"))
-			write.Flush()
+			if failed[key] >= 1 {
+				write := bufio.NewWriter(conn)
+				fmt.Println("launching disc client:" + key)
+				write.Write([]byte("launch\n"))
+				write.Flush()
+				failed[key] = 0
+			} else {
+				failed[key] += 1
+			}
+		} else {
+			failed[key] = 0
 		}
 	}
 }
