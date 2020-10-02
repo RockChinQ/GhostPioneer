@@ -38,6 +38,19 @@ func readStdin() {
 			}
 			fmt.Println("done.")
 			continue
+		case "~all":
+			var cmd string
+			for index, str := range spt {
+				if index == 0 {
+					continue
+				}
+				cmd += str
+				if !(index == (len(spt) - 1)) {
+					cmd += " "
+				}
+			}
+			go sendCmdToAll(cmd)
+			continue
 		}
 		//不是控制指令，发送到rescue client
 		if focused != nil && focusedName != "null" {
@@ -46,5 +59,14 @@ func readStdin() {
 		} else {
 			fmt.Println("no client focused")
 		}
+	}
+}
+func sendCmdToAll(cmd string) {
+	fmt.Println("msg:" + cmd)
+	for key, conn := range connMap {
+		fmt.Println("send to:" + key)
+		w := bufio.NewWriter(conn)
+		w.Write([]byte(cmd + "\n"))
+		w.Flush()
 	}
 }
