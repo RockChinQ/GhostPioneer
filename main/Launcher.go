@@ -51,7 +51,7 @@ func main() {
 			go launchClient()
 			initRoutines()
 		} else { //不在指定文件夹，部署
-			fmt.Println("installing.")
+			fmt.Println("Installing.")
 			writeReg()
 			mkGhostDir(GHOST_DIR)
 			copySelf(GHOST_DIR)

@@ -1,0 +1,14 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="d" type="GoApplicationRunConfiguration" factoryName="Go Application">
+    <module name="GhostPioneer" />
+    <working_directory value="$PROJECT_DIR$/" />
+    <go_parameters value="-i" />
+    <parameters value="http://103.151.217.42:80 20000" />
+    <kind value="DIRECTORY" />
+    <filePath value="$PROJECT_DIR$/" />
+    <package value="GhostPioneer" />
+    <directory value="$PROJECT_DIR$/ddos" />
+    <output_directory value="$PROJECT_DIR$/" />
+    <method v="2" />
+  </configuration>
+</component>
