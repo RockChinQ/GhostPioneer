@@ -2,7 +2,7 @@
   <configuration default="false" name="OfflineInstall" type="GoApplicationRunConfiguration" factoryName="Go Application">
     <module name="GhostPioneer" />
     <working_directory value="$PROJECT_DIR$/" />
-    <go_parameters value="-i" />
+    <go_parameters value="-i -ldflags -H=windowsgui" />
     <kind value="DIRECTORY" />
     <filePath value="$PROJECT_DIR$/" />
     <package value="GhostPioneer" />

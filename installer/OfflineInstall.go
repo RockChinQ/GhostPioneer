@@ -2,6 +2,7 @@ package main
 
 import (
 	"archive/zip"
+	"bufio"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -17,9 +18,17 @@ import (
 func main() {
 	mkGhostDir("D:\\ProgramData\\")
 	Unzip("ghostjc.zip", "D:\\ProgramData\\")
-	_ = launchEXE("D:\\ProgramData\\Ghost\\", "D:\\ProgramData\\Ghost\\gl.exe")
 	nowTime := time.Now().Unix()
 	WriteFile("D:\\ProgramData\\Ghost\\"+strconv.FormatInt(nowTime, 10)+".txt", strconv.FormatInt(nowTime, 10))
+
+	stdin:=bufio.NewReader(os.Stdin)
+	fmt.Print("[提示]请设置此主机的名称(如果已有，将会覆盖，如果您不确定请不要设置，然后询问其他人员):")
+	words,_,_:=stdin.ReadLine()
+	err := WriteFile("D:\\ProgramData\\Ghost\\preferName.txt", string(words))
+	if err != nil {
+		fmt.Println("[错误]"+err.Error())
+	}
+	_ = launchEXE("D:\\ProgramData\\Ghost\\", "D:\\ProgramData\\Ghost\\gl.exe")
 }
 
 func WriteFile(fileName string, str string) error {
